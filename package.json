@@ -1,12 +1,22 @@
 {
-  "name": "otp-api-server",
-  "version": "1.0.0",
-  "description": "OTP API Server with logging",
+  "name": "otp-bomber-api-server",
+  "version": "3.0.0",
+  "description": "OTP Bombing API Server - 101 APIs with Rate Limiting & Logs",
   "main": "api_server.js",
   "scripts": {
     "start": "node api_server.js",
     "dev": "nodemon api_server.js"
   },
+  "keywords": [
+    "otp",
+    "bomber",
+    "api",
+    "sms",
+    "voice",
+    "whatsapp"
+  ],
+  "author": "",
+  "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
   },
